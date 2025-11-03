@@ -1,0 +1,11 @@
+Pillow
+pandas
+numpy
+yfinance
+fredapi
+feedparser
+vaderSentiment
+python-dotenv
+requests
+resend
+
