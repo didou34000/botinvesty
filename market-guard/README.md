@@ -117,5 +117,21 @@ LOOP_MINUTES=180 python -m jobs.run_cycle
 ```
 Rappel: l'email est envoyé uniquement si `maybe_alert_global` confirme (anti-spam).
 
+Étape 11bis — IA Analyst
+------------------------
+
+Activer dans `.env`:
+```
+ENABLE_AI_ANALYST=true
+OPENAI_API_KEY=sk_...
+AI_MODEL=gpt-5
+AI_MAX_TOKENS=600
+```
+Tester:
+```bash
+python -m jobs.test_analyst
+```
+Note: l'IA commente le contexte (verdict/rationale/points/risques) mais ne déclenche pas l'envoi; seul `maybe_alert_global` le fait.
+
 
 

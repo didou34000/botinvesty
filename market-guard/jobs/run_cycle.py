@@ -10,6 +10,7 @@ from app.scoring import riskon_score, macrohealth_score, global_score
 from app.signals import batch_signals
 from app.emailer import send_mail
 from app.trigger import maybe_alert_global
+from app.analyst import generate_market_commentary
 
 
 def compute_scores_and_signals():
@@ -43,9 +44,16 @@ def compute_scores_and_signals():
 	# --- Signaux par actif
 	signals_df = batch_signals(prices)
 
+	# Préparer données pour l'analyste IA
+	scores_dict = {"risk":risk_s, "macro":macro_s, "news":news_s, "global":g}
+	news_titles = texts[:25]
+	signals_records = signals_df.to_dict(orient="records")
+	ai = generate_market_commentary(scores_dict, news_titles, signals_records)
+
 	return {
-		"scores": {"risk":risk_s, "macro":macro_s, "news":news_s, "global":g},
-		"signals_df": signals_df
+		"scores": scores_dict,
+		"signals_df": signals_df,
+		"ai": ai
 	}
 
 
@@ -65,6 +73,8 @@ def format_email(state_word, pack):
 	  <li>NewsSentiment: {s['news']:.1f}</li>
 	</ul>
 	<p>Action: {'Renforcer progressivement (2–4 semaines) sur actions/ETF cœur' if state_word=='RENFORCER' else 'Alléger / augmenter la part de cash' }.</p>
+
+	{f"<h3>IA Analyst — Verdict: {pack['ai'].get('verdict')}</h3><p>{pack['ai'].get('rationale')}</p><ul>" + ''.join(f'<li>{pt}</li>' for pt in pack['ai'].get('key_points',[])) + f"</ul><p><b>A surveiller:</b> {', '.join(pack['ai'].get('risk_watchlist',[]))}</p>" if os.getenv('ENABLE_AI_ANALYST','false').lower()=='true' else ''}
 	<h3>Signaux watchlist</h3>
 	{table_html}
 	<hr/>
